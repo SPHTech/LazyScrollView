@@ -558,7 +558,7 @@
                 [self.recycledMuiIDItemsDic removeObjectForKey:muiID];
             }
             [recycledIdentifierSet removeObject:view];
-            view.gestureRecognizers = nil;
+//            view.gestureRecognizers = nil;
         } else {
             view = nil;
         }
@@ -574,7 +574,7 @@
             }
             [recycledIdentifierSet removeObject:view];
             // Then remove all gesture recognizers of it.
-            view.gestureRecognizers = nil;
+//            view.gestureRecognizers = nil;
         } else {
             view = nil;
         }
