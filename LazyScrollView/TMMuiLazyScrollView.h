@@ -70,6 +70,8 @@
 
 // reloads everything from scratch and redisplays visible views.
 - (void)reloadData;
+// call this func to get the view update without reload the scrollView.
+- (void)invalidateView:(NSUInteger) _index;
 // Remove all subviews and reuseable views.
 - (void)removeAllLayouts;
 

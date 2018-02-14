@@ -514,6 +514,115 @@
 
 }
 
+// Resize everything after a certain index
+- (void)invalidateView:(NSUInteger)_index
+{
+    // TODO: if not call delegate, just update Y in rectmodel
+    NSUInteger count = 0;
+    if (self.dataSource &&
+        [self.dataSource conformsToProtocol:@protocol(TMMuiLazyScrollViewDataSource)] &&
+        [self.dataSource respondsToSelector:@selector(numberOfItemInScrollView:)]) {
+        count = [self.dataSource numberOfItemInScrollView:self];
+    }
+    
+    [self.itemsFrames removeObjectsInRange:NSMakeRange(_index, count-_index)];
+    
+    for (NSUInteger i = _index ; i< count ; i++) {
+        TMMuiRectModel *rectmodel;
+        if (self.dataSource &&
+            [self.dataSource conformsToProtocol:@protocol(TMMuiLazyScrollViewDataSource)] &&
+            [self.dataSource respondsToSelector:@selector(scrollView: rectModelAtIndex:)]) {
+            rectmodel = [self.dataSource scrollView:self rectModelAtIndex:i];
+            if (rectmodel.muiID.length == 0) {
+                rectmodel.muiID = [NSString stringWithFormat:@"%lu", (unsigned long)i];
+            }
+        }
+        [self.itemsFrames tm_safeAddObject:rectmodel];
+    }
+    
+    self.modelsSortedByTop = [self.itemsFrames sortedArrayUsingComparator:^NSComparisonResult(id obj1 ,id obj2) {
+        CGRect rect1 = [(TMMuiRectModel *) obj1 absRect];
+        CGRect rect2 = [(TMMuiRectModel *) obj2 absRect];
+        if (rect1.origin.y < rect2.origin.y) {
+            return NSOrderedAscending;
+        }  else if (rect1.origin.y > rect2.origin.y) {
+            return NSOrderedDescending;
+        } else {
+            return NSOrderedSame;
+        }
+    }];
+    
+    self.modelsSortedByBottom = [self.itemsFrames sortedArrayUsingComparator:^NSComparisonResult(id obj1 ,id obj2) {
+        CGRect rect1 = [(TMMuiRectModel *) obj1 absRect];
+        CGRect rect2 = [(TMMuiRectModel *) obj2 absRect];
+        CGFloat bottom1 = CGRectGetMaxY(rect1);
+        CGFloat bottom2 = CGRectGetMaxY(rect2);
+        if (bottom1 > bottom2) {
+            return NSOrderedAscending;
+        } else if (bottom1 < bottom2) {
+            return  NSOrderedDescending;
+        } else {
+            return NSOrderedSame;
+        }
+    }];
+    
+    // TODO: update subview reload to adust frame only
+    if (self.itemsFrames.count > 0) {
+        CGRect visibleBounds = self.bounds;
+        CGFloat minY = CGRectGetMinY(visibleBounds) - RenderBufferWindow;
+        CGFloat maxY = CGRectGetMaxY(visibleBounds) + RenderBufferWindow;
+        
+        // from here is the rewrite for assembleSubviewsForReload
+        
+        NSSet *itemShouldShowSet = [self showingItemIndexSetFrom:minY to:maxY];
+        self.muiIDOfVisibleViews = [self showingItemIndexSetFrom:CGRectGetMinY(self.bounds) to:CGRectGetMaxY(self.bounds)];
+        
+        NSMutableSet  *recycledItems = [[NSMutableSet alloc] init];
+        // For recycling. Find which views should not in visible area.
+        
+        NSSet *visibles = [_visibleItems copy];
+        for (UIView *view in visibles) {
+            // Make sure whether the view should be shown.
+            BOOL isToShow  = [itemShouldShowSet containsObject:view.muiID];
+            if (!isToShow) {
+                if ([view respondsToSelector:@selector(mui_didLeave)]){
+                    [(UIView<TMMuiLazyScrollViewCellProtocol> *)view mui_didLeave];
+                }
+                // If this view should be recycled and the length of its reuseidentifier is over 0.
+                if (view.reuseIdentifier.length > 0) {
+                    // Then recycle the view.
+                    NSMutableSet *recycledIdentifierSet = [self recycledIdentifierSet:view.reuseIdentifier];
+                    [recycledIdentifierSet addObject:view];
+                    view.hidden = YES;
+                    [recycledItems addObject:view];
+                    // Also add to muiID recycle dict.
+                    [self.recycledMuiIDItemsDic tm_safeSetObject:view forKey:view.muiID];
+                } else if(view.muiID) {
+                    // TODO: update subview reload to adust frame only not reload
+                    for (TMMuiRectModel* itemsFrame in self.itemsFrames)
+                    {
+                        if ([view.muiID isEqualToString:itemsFrame.muiID]) {
+                            [UIView animateWithDuration:0.4 animations:^{
+                                view.frame = [itemsFrame absRect];
+                            }];
+                        }
+                    }
+                }
+            }else if (view.muiID) {
+                // TODO: update subview reload to adust frame only not reload
+                for (TMMuiRectModel* itemsFrame in self.itemsFrames)
+                {
+                    if ([view.muiID isEqualToString:itemsFrame.muiID]) {
+                        [UIView animateWithDuration:0.4 animations:^{
+                            view.frame = [itemsFrame absRect];
+                        }];
+                    }
+                }
+            }
+        }
+    }
+}
+
 // Remove all subviews and reuseable views.
 - (void)removeAllLayouts
 {
