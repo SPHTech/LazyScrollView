@@ -193,6 +193,24 @@
     return self;
 }
 
+- (id)initWithCoder:(NSCoder *)aDecoder
+{
+    if (self = [super initWithCoder:aDecoder]) {
+        self.clipsToBounds = YES;
+        self.autoresizesSubviews = NO;
+        self.showsHorizontalScrollIndicator = NO;
+        self.showsVerticalScrollIndicator = NO;
+        _recycledIdentifierItemsDic = [[NSMutableDictionary alloc] init];
+        _visibleItems = [[NSMutableSet alloc] init];
+        _inScreenVisibleItems = [[NSMutableSet alloc] init];
+        _itemsFrames = [[NSMutableArray alloc] init];
+        _firstSet = [[NSMutableSet alloc] initWithCapacity:30];
+        _secondSet = [[NSMutableSet alloc] initWithCapacity:30];
+        self.delegate = self;
+    }
+    return self;
+}
+
 - (void)dealloc
 {
     _dataSource = nil;
