@@ -77,6 +77,8 @@
 - (void)invalidateView:(NSUInteger) _index;
 // Remove all subviews and reuseable views.
 - (void)removeAllLayouts;
+// trigger datasource update a view in a certain index
+- (void)replaceViewAt:(NSString*) _muiID;
 
 // Get reuseable view by reuseIdentifier. If cannot find reuseable
 // view by reuseIdentifier, here will return nil.

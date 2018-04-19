@@ -679,6 +679,26 @@
     }
 }
 
+// Replace view at a certian index (muiID)
+- (void)replaceViewAt:(NSString*) _muiID
+{
+    UIView *newView = [self.dataSource scrollView:self itemByMuiID:_muiID];
+    NSSet *visibles = _visibleItems;
+    for (UIView *view in visibles) {
+        if ([view.muiID isEqualToString:newView.muiID]) {
+            // found same muiID in visibles
+            // start to replace it
+            if (view.superview) {
+                [view removeFromSuperview];
+            }
+            // this one see later, now default enabled
+            if (self.autoAddSubview) {
+                [self addSubview:newView];
+            }
+        }
+    }
+}
+
 // Remove all subviews and reuseable views.
 - (void)removeAllLayouts
 {
