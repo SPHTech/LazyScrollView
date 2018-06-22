@@ -791,6 +791,14 @@
     self.lastVisibleMuiID = nil;
 }
 
+- (void)cleanupForStoryboard
+{
+    if (_outerScrollView.observationInfo) {
+        [_outerScrollView removeObserver:_outerScrollViewObserver forKeyPath:@"contentOffset"];
+    }
+    _outerScrollViewObserver = nil;
+}
+
 @end
 
 @implementation TMMuiLazyScrollViewObserver

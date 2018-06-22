@@ -91,6 +91,12 @@
 // After call this method, the times of mui_didEnterWithTimes will start from 0
 - (void)resetViewEnterTimes;
 
+/**
+ This is helper for remove private property `outerScrollViewObserver` when you use TLScrollView in Storyboard or NIb.
+ You can ignore callling this when using TLScrollView with frame.
+ */
+- (void)cleanupForStoryboard;
+
 @end
 
 //****************************************************************
