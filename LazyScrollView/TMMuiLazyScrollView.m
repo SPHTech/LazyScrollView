@@ -793,8 +793,15 @@
 
 - (void)cleanupForStoryboard
 {
-    if (_outerScrollView.observationInfo) {
-        [_outerScrollView removeObserver:_outerScrollViewObserver forKeyPath:@"contentOffset"];
+    if (_outerScrollView.observationInfo && _outerScrollViewObserver != nil) {
+        NSLog(@"cleanupForStoryboard try remove observer forKeyPath contentOffset");
+        @try {
+            [_outerScrollView removeObserver:_outerScrollViewObserver forKeyPath:@"contentOffset"];
+        } @catch (NSException *exception) {
+            NSLog(@"cleanupForStoryboard catch error %@", exception);
+        } @finally {
+            NSLog(@"cleanupForStoryboard finally");
+        }
     }
     _outerScrollViewObserver = nil;
 }
